@@ -1,0 +1,65 @@
+	XREF	disp, init_LCD, SetLCD_MainMenu, SetLCD_PlayMenu, SetLCD_SettingsMenu, SetLCD_LoadVHS, SetLCD_ParentPswrdSet, SetLCD_DateTime, SetLCD_PreviousMenu, SetLCD_PlayMovie, SetLCD_RecordNow, SetLCD_RecordLater, SetLCD_EjectVHS, SetLCD_FastForward, SetLCD_Rewind, SetLCD_Playing, SetLCD_Paused, SetLCD_MainMenuReturn, Option, Pot_Menu_Selector, Menu, SetLCD_Error
+	XREF	display_string, SetLCD_SelectSettingsMenu, PB_Testing, Port_P, DelayCounter, PreviousMenu, Action_LoadVHS
+	XDEF	SetLCD_StartMenu
+
+SetLCD_StartMenu:
+
+;*********************string initializations*********************
+           ;intializing string "disp" to be:
+
+           movb #' ',disp	 ;Line 1 Start
+           movb #' ',disp+1
+           movb #'S',disp+2
+           movb #'t',disp+3
+           movb #'a',disp+4
+           movb #'r',disp+5
+           movb #'t',disp+6
+           movb #' ',disp+7
+           movb #'M',disp+8
+           movb #'e',disp+9
+           movb #'n',disp+10
+           movb #'u',disp+11
+           movb #':',disp+12
+           movb #' ',disp+13
+           movb #' ',disp+14
+           movb #' ',disp+15
+    
+;*********************string initialization*********************
+
+			LDAA	Menu
+			STAA	PreviousMenu
+			MOVB	#1, Menu
+			LDD		#disp
+			JSR		display_string
+Loop:		JSR		Pot_Menu_Selector
+			LDAA	Option
+			CMPA	#1
+			BEQ		LoadVHS
+			CMPA	#2
+			BEQ		Settings
+			BRA		Error
+			
+LoadVHS:	JSR		SetLCD_LoadVHS
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			CMPA	#0
+			BEQ		LoadingVHS
+			BRA		Loop
+			
+Settings:	JSR		SetLCD_SelectSettingsMenu
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			CMPA	#0
+			BEQ		MenuSwitch
+			BRA		Loop
+			
+Error:		JSR		SetLCD_Error
+			BRA		Loop
+			
+MenuSwitch:	JSR		SetLCD_SettingsMenu
+
+LoadingVHS:	JSR		Action_LoadVHS
+			
+			RTS

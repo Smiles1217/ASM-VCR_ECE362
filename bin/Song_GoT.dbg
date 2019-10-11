@@ -1,0 +1,20 @@
+  XREF  ToneCount, GoT_Sequence, SendsChr, PlayTone, Num_Seconds, Num_HalfSeconds, EjectSongDone
+  XDEF  Song_GoT
+ 
+Song_GoT:
+
+      LDAB  ToneCount
+      CMPB  #8
+      BEQ   ResetToneCount
+      LDX   #GoT_Sequence
+      LDAA  B,x
+      PSHA
+      JSR   SendsChr
+      JSR   PlayTone
+      PULA
+      RTS
+      
+ResetToneCount:
+      MOVB  #0,ToneCount
+      MOVB  #1,EjectSongDone
+      BRA   Song_GoT

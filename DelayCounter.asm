@@ -1,0 +1,13 @@
+	XDEF	DelayCounter
+
+;****************************************************************
+;THIS SECTION IS ONLY USED TO DEBOUNCE THE KEYPAD AND PUSH-BUTTON
+;****************************************************************
+
+DelayCounter:	PSHX
+				      LDX			#10000
+
+Loop:			    DEX
+				      BNE			Loop
+				      PULX
+				      RTS			

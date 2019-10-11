@@ -1,0 +1,90 @@
+	XREF	disp, SetLCD_StartMenu, SetLCD_PlayMenu, SetLCD_SettingsMenu, SetLCD_LoadVHS, SetLCD_ParentPswrdSet, SetLCD_DateTime, SetLCD_PreviousMenu, SetLCD_PlayMovie, SetLCD_RecordNow, SetLCD_RecordLater, SetLCD_EjectVHS, SetLCD_FastForward, SetLCD_Rewind, SetLCD_Playing, SetLCD_Paused, SetLCD_MainMenuReturn, Option, Pot_Menu_Selector, Menu, SetLCD_Error
+	XREF	display_string, SetLCD_SelectSettingsMenu, DelayCounter, PB_Testing, Port_P, PreviousMenu, Action_EjectVHS
+	XDEF	SetLCD_MainMenu
+
+SetLCD_MainMenu:
+
+;*********************string initializations*********************
+           ;intializing string "disp" to be:
+           ;"The value of the pot is:      ",0
+           movb #' ',disp	 ;Line 1 Start
+           movb #' ',disp+1
+           movb #' ',disp+2
+           movb #'M',disp+3
+           movb #'a',disp+4
+           movb #'i',disp+5
+           movb #'n',disp+6
+           movb #' ',disp+7
+           movb #'M',disp+8
+           movb #'e',disp+9
+           movb #'n',disp+10
+           movb #'u',disp+11
+           movb #':',disp+12
+           movb #' ',disp+13
+           movb #' ',disp+14
+           movb #' ',disp+15
+              
+;*********************string initialization*********************
+
+			LDAA	Menu
+			STAA	PreviousMenu
+
+			LDD		#disp
+			JSR		display_string
+			
+Loop:		JSR		Pot_Menu_Selector
+			LDAA	Option
+			CMPA	#1
+			BEQ		PlayMovie
+			CMPA	#2
+			BEQ		RecordNow				;May want to add Bonus Feature Menu?
+			CMPA	#3
+			BEQ		RecordLater
+			CMPA	#4
+			BEQ		EjectVHS
+			CMPA	#5
+			BEQ		Settings
+			BRA		Error
+			
+PlayMovie:	JSR		SetLCD_PlayMovie
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			BRA		Loop
+			
+RecordNow:	JSR		SetLCD_RecordNow
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			BRA		Loop
+			
+RecordLater:JSR		SetLCD_RecordLater
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			BRA		Loop
+			
+EjectVHS:	JSR		SetLCD_EjectVHS
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			CMPA	#0
+			BEQ		EjectingVHS
+			BRA		Loop
+			
+Settings:	JSR		SetLCD_SelectSettingsMenu
+			LDAA	Port_P
+			JSR		DelayCounter
+			STAA	PB_Testing
+			CMPA	#0
+			BEQ		MenuSwitch
+			BRA		Loop
+			
+Error:		JSR		SetLCD_Error
+			BRA		Loop
+			
+MenuSwitch:	JSR		SetLCD_SettingsMenu			;Right Now can only go to settings, however I will need to change it so that it can switch to Play menu also
+
+EjectingVHS:JSR		Action_EjectVHS
+
+			RTS

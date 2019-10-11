@@ -1,0 +1,32 @@
+	XREF	disp, SetLCD_StartMenu, SetLCD_MainMenu, SetLCD_SettingsMenu, SetLCD_LoadVHS, SetLCD_ParentPswrdSet, SetLCD_DateTime, SetLCD_PreviousMenu, SetLCD_PlayMovie, SetLCD_RecordNow, SetLCD_RecordLater, SetLCD_EjectVHS, SetLCD_FastForward, SetLCD_Rewind, SetLCD_Playing, SetLCD_Paused, SetLCD_MainMenuReturn, Option, Pot_Menu_Selector, Menu, SetLCD_Error
+	XREF	display_string, SetLCD_SelectSettingsMenu, DelayCounter, PB_Testing, Port_P, PreviousMenu
+	XDEF	SetLCD_PlayMenu
+
+SetLCD_PlayMenu:
+
+;*********************string initializations*********************
+           ;intializing string "disp" to be:
+           ;"The value of the pot is:      ",0
+           movb #' ',disp	 ;Line 1 Start
+           movb #' ',disp+1
+           movb #' ',disp+2
+           movb #'P',disp+3
+           movb #'l',disp+4
+           movb #'a',disp+5
+           movb #'y',disp+6
+           movb #' ',disp+7
+           movb #'M',disp+8
+           movb #'e',disp+9
+           movb #'n',disp+10
+           movb #'u',disp+11
+           movb #':',disp+12
+           movb #' ',disp+13
+           movb #' ',disp+14
+           movb #' ',disp+15
+               
+;*********************string initialization*********************
+
+			LDAA	Menu
+			STAA	PreviousMenu
+
+		    RTS

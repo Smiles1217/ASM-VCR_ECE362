@@ -1,0 +1,147 @@
+	XREF	disp, SetLCD_EjectVHS, SetLCD_StartMenu, SetLCD_MainMenu, SetLCD_PlayMenu, SetLCD_SettingsMenu, SetLCD_LoadVHS, SetLCD_ParentPswrdSet, SetLCD_DateTime, SetLCD_PreviousMenu, SetLCD_PlayMovie, SetLCD_RecordNow, SetLCD_RecordLater, SetLCD_FastForward, SetLCD_Rewind, SetLCD_Playing, SetLCD_Paused, SetLCD_MainMenuReturn, Option, Pot_Menu_Selector, Menu, SetLCD_Error
+	XREF	display_string, SetLCD_SelectSettingsMenu, StepperForward, StepperBackward, PB_Testing, Port_P, DelayCounter, PreviousMenu, Counter, StepperAcceleration, LoadingDots, AddLoadDot, SpeedSwitch, Num_Seconds, StepperSlowDown, StepperHalfTurn, ResetVariables, StepperTesting
+	XDEF	Action_LoadVHS
+
+Action_LoadVHS:
+
+;*********************string initializations*********************
+           ;intializing string "disp" to be:
+
+		   movb #' ',disp	 ;Line 1 Start
+           movb #' ',disp+1
+           movb #' ',disp+2
+           movb #' ',disp+3
+           movb #' ',disp+4
+           movb #'L',disp+5
+           movb #'o',disp+6
+           movb #'a',disp+7
+           movb #'d',disp+8
+           movb #'i',disp+9
+           movb #'n',disp+10
+           movb #'g',disp+11
+           movb #' ',disp+12
+           movb #' ',disp+13
+           movb #' ',disp+14
+           movb #' ',disp+15
+           movb #' ',disp+16 ;Line 2 Start
+           movb #' ',disp+17
+           movb #' ',disp+18
+           movb #' ',disp+19
+           movb #'V',disp+20 
+           movb #'H',disp+21 
+           movb #'S',disp+22 ;The next 5 are Loading Dots
+           movb #' ',disp+23 ;.
+           movb #' ',disp+24 ;.
+           movb #' ',disp+25 ;.
+           movb #' ',disp+26 ;.
+           movb #' ',disp+27 ;.
+           movb #' ',disp+28 
+           movb #' ',disp+29
+           movb #' ',disp+30
+           movb #' ',disp+31
+           movb #0,disp+32    ;string terminator, acts like '\0'    
+;*********************string initialization*********************
+			
+			LDD		#disp
+			JSR 	display_string
+			
+			MOVB	#2, Menu			;After Loading, go to Main Menu
+			JSR		ResetVariables		;Reset Global Variables
+			MOVW	#300,Num_Seconds	;Loop 300 Times to get 3 Seconds
+			JSR		AddLoadDot
+
+;This is where we will need to write the code that will play the "Load" music (If we want to, IT IS NOT REQUIRED)
+
+Accelerate:	LDX		#StepperForward		;FORWARD (Clockwise)
+			LDAB	Counter
+			CMPB	#5					;Compare the Current Value of Register B to 5
+			BGE		Reset1				;If the Value of Register B > 5, branch to "Reset1"
+			LDAA	B,x					;Load the B'th Value of the Array stored in Register X into Accumulator A
+			STAA	Port_P				;Store the Value in Accumulator A to "port_p" to Turn the Motor
+			STAA	StepperTesting
+			JSR		StepperAcceleration	;Run the Stepper Motor Acceleration Subroutine
+			LDAA	SpeedSwitch
+			CMPA	#20
+			BEQ		Run3Sec
+			INC		Counter				;Increment the Counter
+			BRA		Accelerate			
+			
+Reset1:		MOVB	#0, Counter			;Reset the Counter Value back to 0
+			BRA		Accelerate			;Branch back to "Accelerate"
+			
+Run3Sec:	MOVB	Counter, Port_P
+			INC		Counter
+			JSR		AddLoadDot			;NOTE: This causes a Fractional Pause, So may want to ask about or just replace with RTI version
+			LDY		#$1770
+			BRA		SpeedLoop
+
+Loop:		LDX		#StepperForward		;FORWARD (Clockwise)
+			LDAB	Counter				
+			CMPB	#5					;Compare the Current Value of Register B to 5
+			BGE		Reset2				;If the Value of Register B > 5, branch to "Reset2"
+			LDAA	B,x					;Load the B'th Value of the Array stored in Register X into Accumulator A
+			STAA	Port_P
+			
+SpeedLoop:	DEY
+			BNE		SpeedLoop			
+
+			INC		Counter
+			LDX		Num_Seconds
+			DEX
+			STX		Num_Seconds
+			CPX		#0
+			BEQ		SpeedReset
+			LDY		#$1770
+			BRA		Loop
+
+Reset2:		MOVB	#0, Counter			;Reset the Counter Value back to 0
+			BRA		Loop				;Branch back to "Loop"
+
+SpeedReset:	MOVB	#0, SpeedSwitch
+
+SlowDown:	LDX		#StepperForward		;FORWARD (Clockwise)
+			LDAB	Counter
+			CMPB	#5					;Compare the Current Value of Register B to 5
+			BGE		Reset3				;If the Value of Register B > 5, branch to "Reset1"
+			LDAA	B,x					;Load the B'th Value of the Array stored in Register X into Accumulator A
+			STAA	Port_P				;Store the Value in Accumulator A to "port_p" to Turn the Motor
+			JSR		StepperSlowDown		;Run the Stepper Motor Slow Down Subroutine
+			LDAA	SpeedSwitch
+			CMPA	#20
+			BEQ		GoBack
+			INC		Counter				;Increment the Counter
+			BRA		SlowDown			
+			
+Reset3:		MOVB	#0, Counter			;Reset the Counter Value back to 0
+			BRA		SlowDown			;Branch back to "SlowDown"
+
+GoBack:		JSR		AddLoadDot
+			LDY		#10000
+			BRA		ReverseLoop
+			
+Reverse:	LDX		#StepperBackward	;BACKWARD (Counter-Clockwise)
+			LDAB	Counter
+			CMPB	#5
+			BGE		Reset4
+			LDAA	B,x					;Load the B'th Value of the Array stored in Register X into Accumulator A
+			STAA	Port_P				;Store the Value in Accumulator A to "port_p" to Turn the Motor
+			
+ReverseLoop:DEY
+			BNE		ReverseLoop			
+
+			INC		Counter
+			LDY		#10000
+			BRA		Reverse
+			
+Reset4:		MOVB	#0, Counter			;Reset the Counter Value back to 0
+			INC		StepperHalfTurn
+			LDAA	StepperHalfTurn
+			CMPA	#8
+			BEQ		GoMainMenu
+			BRA		Reverse				;Branch back to "Reverse"		
+
+GoMainMenu:	JSR		AddLoadDot
+			MOVB	#0, Counter
+			JSR		SetLCD_MainMenu
+
+		   	RTS

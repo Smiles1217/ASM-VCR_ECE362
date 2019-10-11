@@ -1,0 +1,52 @@
+	XDEF Check_Play_Time
+	XREF display_string, disp, MovieLength, MRating
+	
+My_Variables	SECTION
+Hold			ds.b	1
+
+My_Constants 	SECTION
+DISP3			dc.b 	'Invalid Time                  0'
+
+Check_Play_Time:
+
+			LDAA disp+22		          ;Movie cannot be more than 4 hours long
+			SUBA #$30
+			CMPA #3
+			BHI Inv
+			
+			LDAA disp+24		          ;Check 10s min variable
+			SUBA #$30
+			CMPA #5
+			BHI Inv
+							
+			LDAA disp+27		          ;Checks 10s second variable 
+			SUBA #$30
+			CMPA #5
+			BHI Inv
+			BRA Rate			
+			
+Rate:	      RTS                 ;Return to the PlayT Subroutine to run DivideLED and then MRating
+				
+Inv:	      LDX	  #DISP3				;Load the address of what needs to be displayed
+		        LDY   #disp				  ;Load the disp variable		
+
+		
+Init:	      LDAA  1,X+				  ;Load first variable of DISP. initalize the string.
+		        CMPA  #$30					;See if last value
+		        BEQ   Next				  ;Move to the next thing.
+		        STAA  1,Y+			  	;Save it to the address in disp
+		        BRA   Init				  ;Keep looping until string is populated.
+	
+Next:	      LDD   #disp
+		        JSR   display_string
+		
+			      LDY   #60000				;Displays incorrect date string for a time
+			      LDAA  #20
+Loop1:		  DEY
+			      BEQ   Next1
+			      BRA   Loop1
+Next1:		  DECA 
+			      BEQ   Return
+			      BRA   Loop1
+			
+Return:		  JSR   MovieLength			;Ask the user to enter in the Movie Length again

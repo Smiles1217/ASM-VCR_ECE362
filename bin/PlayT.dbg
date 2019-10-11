@@ -1,0 +1,122 @@
+	XDEF PlayT
+	XREF PlayPause, MTime, disp, display_string, SetLCD_PlayMenu, SetLCD_SettingsMenu, SSaverFlg, MRating, Parent_Control_Disp, SECOND
+	XREF Menu, SetLCD_MainMenu, CountMS, StoreIND, CurrSSSet, SetLCD_StartMenu, Keypad, SSKeypad, PreviousMenu, port_s, LEDVAL
+	XREF PB_Testing, DelayCounter, Port_P, Alternator, StartPlaying
+	
+My_Constants 	SECTION
+DISP			dc.b 	'    Playing          :  :       0'
+DISP1			dc.b	'    Paused           :  :       0'
+
+My_Variables	SECTION
+
+	
+PlayT:    LDAA Menu
+		      STAA PreviousMenu
+		      LDAA PlayPause
+		      CMPA #1					;Playing
+		      BEQ PlayS
+		
+PauseS:	  LDX #DISP1
+		      LDY #disp
+		      BRA Init
+		
+PlayS:	  LDX	#DISP				;Load the address of what needs to be displayed
+		      LDY #disp				;Load the disp variable		
+
+		
+Init:	    LDAA 1,X+				;Load first variable of DISP. initalize the string.
+		      CMPA #$30				;See if last value
+	      	BEQ Next				;Move to the next thing.
+	      	STAA 1,Y+				;Save it to the address in disp
+	      	BRA Init				;Keep looping until string is populated.
+	
+
+
+
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DISPLAY PLAY TIME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Next:	        MOVB  #1,SSKeypad
+		          JSR   Keypad 
+	          	LDAA  StoreIND
+		          CMPA  #$FF
+		          BNE	  Wakeup
+	
+		          LDAA 	LEDVAL			      ;Update LEDs as time goes on
+		          STAA 	port_s
+		
+		          LDAA	Port_P
+		          JSR		DelayCounter		  ;Debouncing for PB
+		          STAA	PB_Testing
+		          CMPA	#0
+		          BEQ		Release 	        ;Branch to Playmovie menu.
+		
+		          LDD   #disp
+		          JSR   display_string
+		
+		          LDX   #MTime
+		          LDAA  X
+		          STAA  disp+20
+	          	LDAA  1,X
+		          STAA  disp+22
+		          LDAA  2,X
+		          STAA  disp+23
+		          LDAA  3,X
+		          STAA  disp+25
+	          	LDAA  4,X
+		          STAA  disp+26
+		
+	          	LDAA  CurrSSSet
+		          CMPA  #0
+		          BEQ   Wakeup
+		          BRA   Next
+		
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Release:      LDAA  Port_P            ;This Section waits for the PB to be released
+              JSR		DelayCounter			;Wait 1 Millisecond (Debounce)
+              CMPA  #0          
+              BEQ   Release
+              BRA   Pause
+		
+Pause:	      LDAA  PlayPause
+		          CMPA  #1
+		          BEQ   NowPause
+		          MOVB  #1,PlayPause
+		          MOVB  #2,Alternator
+		          MOVB	#1,StartPlaying		;Set StartPlaying to 1, so that the RTI knows to start the DC Motor
+		          JSR   PlayT
+		
+NowPause:		  MOVB  #2,PlayPause
+              MOVB  #3,Alternator
+              MOVB	#0,StartPlaying		;Set StartPlaying to 0, so that the RTI knows to stop the DC Motor 
+				      JSR   PlayT
+
+
+Wakeup:	      MOVB  #0,SSaverFlg
+		          MOVB  #0,SECOND
+		          MOVB  #0,CountMS
+		          MOVB  #0,SSKeypad
+		          LDAA  PreviousMenu
+		          CMPA  #1						;Start Menu
+		          BEQ   StartM
+		          CMPA  #2						;Main Menu
+		          BEQ   MainM				
+		          CMPA  #3						;Play Menu
+		          BEQ   PlayM 
+		          CMPA  #4						;Settings Menu
+		          BEQ   SetM
+		          CMPA  #5						;Rating Menu
+		          BEQ   RatingM						
+		          BRA   ParentM
+
+StartM:			  JSR SetLCD_StartMenu			;Branch to the start menu
+				      
+PlayM:			  JSR SetLCD_PlayMenu
+
+ParentM:		  JSR Parent_Control_Disp			
+
+MainM:			  JSR SetLCD_MainMenu
+
+SetM:			    JSR SetLCD_SettingsMenu
+
+RatingM:	  	JSR MRating

@@ -1,0 +1,59 @@
+	XDEF Confirmed
+	XREF disp, display_string
+	
+Confirmed:
+
+;*********************string initializations*********************
+           ;intializing string "disp" to be:
+
+           movb #'E',disp	 ;Line 1 Start
+           movb #'n',disp+1
+           movb #'t',disp+2
+           movb #'e',disp+3
+           movb #'r',disp+4
+           movb #'e',disp+5
+           movb #'d',disp+6
+           movb #' ',disp+7
+           movb #'C',disp+8
+           movb #'o',disp+9
+           movb #'r',disp+10
+           movb #'r',disp+11
+           movb #'e',disp+12
+           movb #'c',disp+13
+           movb #'t',disp+14
+           movb #' ',disp+15
+           movb #'P',disp+16 ;Line 2 Start
+           movb #'a',disp+17
+           movb #'s',disp+18
+           movb #'s',disp+19
+           movb #'w',disp+20
+           movb #'o',disp+21
+           movb #'r',disp+22
+           movb #'d',disp+23
+           movb #'!',disp+24
+           movb #' ',disp+25 
+           movb #' ',disp+26 
+           movb #' ',disp+27 
+           movb #' ',disp+28
+           movb #' ',disp+29
+           movb #' ',disp+30
+           movb #' ',disp+31
+           movb #0  ,disp+32    ;string terminator, acts like '\0' 
+    
+;*********************string initialization*********************
+
+			    LDD #disp
+			    JSR display_string 
+			
+			    LDY #60000
+			    LDAA #20
+
+Loop:	    DEY
+		  	  BEQ Next 
+		    	BRA Loop
+
+Next:	    DECA 
+		    	BEQ Return
+			    BRA Loop
+			
+Return:		RTS
